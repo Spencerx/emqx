@@ -5,7 +5,7 @@ defmodule EMQXBridgeS3.MixProject do
   def project do
     [
       app: :emqx_bridge_s3,
-      version: "0.1.0",
+      version: "0.1.12",
       build_path: "../../_build",
       erlc_options: UMP.erlc_options(),
       erlc_paths: UMP.erlc_paths(),
@@ -18,14 +18,22 @@ defmodule EMQXBridgeS3.MixProject do
   end
 
   def application do
-    [extra_applications: UMP.extra_applications(), mod: {:emqx_bridge_s3_app, []}]
+    [
+      extra_applications: UMP.extra_applications(),
+      mod: {:emqx_bridge_s3_app, []},
+      env: [
+        emqx_action_info_modules: [:emqx_bridge_s3_upload_action_info],
+        emqx_connector_info_modules: [:emqx_bridge_s3_connector_info]
+      ]
+    ]
   end
 
   def deps() do
     [
       {:emqx_resource, in_umbrella: true},
       {:emqx_connector_aggregator, in_umbrella: true},
-      {:emqx_s3, in_umbrella: true}
+      {:emqx_s3, in_umbrella: true},
+      UMP.common_dep(:erlcloud)
     ]
   end
 end

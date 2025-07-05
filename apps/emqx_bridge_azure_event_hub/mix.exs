@@ -5,7 +5,7 @@ defmodule EMQXBridgeAzureEventHub.MixProject do
   def project do
     [
       app: :emqx_bridge_azure_event_hub,
-      version: "0.1.0",
+      version: "0.2.4",
       build_path: "../../_build",
       erlc_options: UMP.erlc_options(),
       erlc_paths: UMP.erlc_paths(),
@@ -18,7 +18,13 @@ defmodule EMQXBridgeAzureEventHub.MixProject do
   end
 
   def application do
-    [extra_applications: UMP.extra_applications()]
+    [
+      extra_applications: UMP.extra_applications(),
+      env: [
+        emqx_action_info_modules: [:emqx_bridge_azure_event_hub_action_info],
+        emqx_connector_info_modules: [:emqx_bridge_azure_event_hub_connector_info]
+      ]
+    ]
   end
 
   def deps() do
@@ -28,6 +34,7 @@ defmodule EMQXBridgeAzureEventHub.MixProject do
       UMP.common_dep(:brod_gssapi),
       UMP.common_dep(:brod),
       UMP.common_dep(:snappyer),
+      UMP.common_dep(:telemetry),
       {:emqx_connector, in_umbrella: true, runtime: false},
       {:emqx_resource, in_umbrella: true},
       {:emqx_bridge, in_umbrella: true, runtime: false}

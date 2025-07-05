@@ -1,6 +1,6 @@
 {application, emqx_bridge_doris, [
     {description, "EMQX Enterprise Doris Bridge"},
-    {vsn, "1.0.0"},
+    {vsn, "1.0.1"},
     {registered, []},
     {applications, [
         kernel,
@@ -8,7 +8,10 @@
         emqx_resource,
         emqx_bridge_mysql
     ]},
-    {env, []},
+    {env, [
+        {emqx_action_info_modules, [emqx_bridge_doris_action_info]},
+        {emqx_connector_info_modules, [emqx_bridge_doris_connector_info]}
+    ]},
     {modules, []},
 
     {links, []}

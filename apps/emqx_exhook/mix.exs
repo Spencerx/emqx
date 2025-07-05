@@ -5,7 +5,7 @@ defmodule EMQXExhook.MixProject do
   def project do
     [
       app: :emqx_exhook,
-      version: "0.1.0",
+      version: "5.0.21",
       build_path: "../../_build",
       compilers: [:elixir, :grpc, :erlang, :app, :copy_srcs],
       # used by our `Mix.Tasks.Compile.CopySrcs` compiler
@@ -13,14 +13,18 @@ defmodule EMQXExhook.MixProject do
       # used by our `Mix.Tasks.Compile.Grpc` compiler
       grpc_opts: %{
         gpb_opts: [
-          module_name_prefix: 'emqx_',
-          module_name_suffix: '_pb',
-          o: 'src/pb',
+          module_name_prefix: ~c"emqx_",
+          module_name_suffix: ~c"_pb",
+          o: ~c"src/pb"
         ],
         proto_dirs: ["priv/protos"],
         out_dir: "src/pb"
       },
-      erlc_options: UMP.erlc_options(),
+      xref_ignores: [
+        :emqx_exhook_pb,
+        :emqx_exproto_pb
+      ],
+      erlc_options: UMP.strict_erlc_options(),
       erlc_paths: UMP.erlc_paths(),
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
@@ -39,12 +43,14 @@ defmodule EMQXExhook.MixProject do
       {:emqx_mix_utils, in_umbrella: true, runtime: false},
       {:emqx, in_umbrella: true},
       {:emqx_utils, in_umbrella: true},
+      UMP.common_dep(:minirest),
       UMP.common_dep(:grpc)
     ]
   end
 
   defp extra_dirs() do
     dirs = []
+
     if UMP.test_env?() do
       ["test" | dirs]
     else

@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Emqx.Cover do
   @requirements ["compile", "loadpaths"]
 
   @impl true
-  def run(args) do
+  def run(_args) do
     cover_dir = Path.join([Mix.Project.build_path(), "cover"])
     File.mkdir_p!(cover_dir)
 
@@ -22,6 +22,7 @@ defmodule Mix.Tasks.Emqx.Cover do
     :ok = :cover.reset()
 
     ECt.info("Loading coverdata...")
+
     Enum.each(coverdata_files, fn coverdata_file ->
       case :cover.import(to_charlist(coverdata_file)) do
         :ok ->
@@ -36,6 +37,7 @@ defmodule Mix.Tasks.Emqx.Cover do
     File.mkdir_p!(outdir)
 
     ECt.info("Analyzing coverdata...")
+
     results =
       :cover.imported_modules()
       |> Enum.flat_map(fn mod ->
@@ -43,13 +45,18 @@ defmodule Mix.Tasks.Emqx.Cover do
         outfile = Path.join([outdir, "#{mod}.html"]) |> to_charlist()
         coverage = compute_coverage(mod)
         ECt.debug("Analyzing coverage of #{mod}")
+
         case :cover.analyze_to_file(mod, outfile, [:html]) do
-          {:ok, file} ->
+          {:ok, _file} ->
             mod_report_path = Path.relative_to(outfile, cover_dir)
             [%{mod: mod, mod_report_path: mod_report_path, cover_percentage: coverage}]
 
           {:error, reason} ->
-            ECt.warn("Couldn't write annotated file for module #{mod}: #{inspect(reason, pretty: true)}")
+            ECt.warn(
+              "Couldn't write annotated file for module #{mod}: #{inspect(reason, pretty: true)}"
+            )
+
+            []
         end
       end)
       |> Enum.sort_by(& &1.mod)
@@ -58,10 +65,11 @@ defmodule Mix.Tasks.Emqx.Cover do
 
     aggregate_outfile = Path.join(cover_dir, "index.html")
     ECt.info("Saving analysis index to #{aggregate_outfile}")
+
     __DIR__
     |> Path.join("cover_index.html.eex")
     |> EEx.eval_file([lines: results], [])
-    |> then(& File.write!(aggregate_outfile, &1))
+    |> then(&File.write!(aggregate_outfile, &1))
 
     ECt.info("Cover analysis done")
 
@@ -69,19 +77,25 @@ defmodule Mix.Tasks.Emqx.Cover do
   end
 
   defp compute_coverage(mod) do
-    {:ok, result} = :cover.analyse(mod, :coverage, :line)
-    coverage = Enum.reduce(result, {0, 0}, fn
-      {{_, 0}, _}, acc ->
-        # line 0 is a line added by eunit and never executed so ignore it
-        acc
+    with {:ok, result} <- :cover.analyse(mod, :coverage, :line) do
+      coverage =
+        Enum.reduce(result, {0, 0}, fn
+          {{_, 0}, _}, acc ->
+            # line 0 is a line added by eunit and never executed so ignore it
+            acc
 
-      {_, {covered, not_covered}}, {acc_cov, acc_not_cov} ->
-        {acc_cov + covered, acc_not_cov + not_covered}
-    end)
+          {_, {covered, not_covered}}, {acc_cov, acc_not_cov} ->
+            {acc_cov + covered, acc_not_cov + not_covered}
+        end)
 
-    case coverage do
-      {_, 0} -> 100
-      {cov, not_cov} -> trunc(cov / (cov + not_cov) * 100)
+      case coverage do
+        {_, 0} -> 100
+        {cov, not_cov} -> trunc(cov / (cov + not_cov) * 100)
+      end
+    else
+      err ->
+        ECt.warn("Couldn't analyze coverage of #{mod}: #{inspect(err, pretty: true)}")
+        0
     end
   end
 

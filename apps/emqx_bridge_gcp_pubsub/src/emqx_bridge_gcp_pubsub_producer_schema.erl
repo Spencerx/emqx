@@ -64,11 +64,7 @@ fields(action_parameters) ->
     lists:map(
         fun
             ({local_topic, Sc}) ->
-                Override = #{
-                    %% to please dialyzer...
-                    type => hocon_schema:field_schema(Sc, type),
-                    importance => ?IMPORTANCE_HIDDEN
-                },
+                Override = #{importance => ?IMPORTANCE_HIDDEN},
                 {local_topic, hocon_schema:override(Sc, Override)};
             (Field) ->
                 Field
@@ -79,7 +75,6 @@ fields(action_parameters) ->
 %% Connector fields
 %%=========================================
 fields("config_connector") ->
-    %% FIXME
     emqx_connector_schema:common_fields() ++
         connector_config_fields();
 fields(connector_resource_opts) ->
