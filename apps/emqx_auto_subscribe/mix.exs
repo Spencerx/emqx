@@ -5,7 +5,7 @@ defmodule EMQXAutoSubscribe.MixProject do
   def project do
     [
       app: :emqx_auto_subscribe,
-      version: "0.1.0",
+      version: "0.1.9",
       build_path: "../../_build",
       erlc_options: UMP.erlc_options(),
       erlc_paths: UMP.erlc_paths(),
@@ -18,10 +18,17 @@ defmodule EMQXAutoSubscribe.MixProject do
   end
 
   def application do
-    [extra_applications: UMP.extra_applications(), mod: {:emqx_auto_subscribe_app, []}]
+    [
+      extra_applications: UMP.extra_applications(),
+      mod: {:emqx_auto_subscribe_app, []}
+    ]
   end
 
   def deps() do
-    [{:emqx, in_umbrella: true}, {:emqx_utils, in_umbrella: true}]
+    [
+      {:emqx, in_umbrella: true},
+      {:emqx_utils, in_umbrella: true},
+      UMP.common_dep(:minirest)
+    ]
   end
 end
